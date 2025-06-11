@@ -1,8 +1,6 @@
 ################################################################################
-# Author : Amit Jagannath Patil
-# Date   : 29 May 2025
 # Purpose: model used in analysis for
-#          Patil et al. [submitted manuscript]
+#          Submitted manuscript [Nature Food]
 # NOTE   : this code is a guide for transparency and
 #          reproducibility
 ################################################################################ 
