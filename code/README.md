@@ -10,6 +10,6 @@ In this project, we employ a data-driven approach to compare and analyze various
 
 ## Associated Publication
 
-The code within this repository is a component of a manuscript that has been submitted to **Nature Food Journal**. We anticipate that the publication of this work will contribute significantly to the understanding of microplastic dynamics in marine ecosystems.
+The code within this repository is a component of a manuscript that has been submitted scientific journal. We anticipate that the publication of this work will contribute significantly to the understanding of microplastic dynamics in marine ecosystems.
 
 ---
