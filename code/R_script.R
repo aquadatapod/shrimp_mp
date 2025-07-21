@@ -23,7 +23,10 @@ library(qgam)
 library(mgcViz)
 library(ellipse) # correlation plot
 library(RColorBrewer) # corelation plot
-library("corrplot")   
+library(corrplot)   
+library(ggplot2)
+library(ggtext)
+library(grid) # For proper margin units
 
 # loading data 
 imp.dat<-read_excel("data/shrimp_data.xlsx",sheet = "shrimp")
@@ -397,3 +400,89 @@ plot_h<-plot(sm(a1,4),trans=function(x) x+coef(a1)[1]
 figure_3 <- mgcViz::gridPrint(plot_e,plot_f,plot_g, plot_h,
                               plot_a,plot_b,plot_c, plot_d,nrow=2)
 ################################################################################
+
+# Changepoint and threshold detection###########################################
+
+# Get fitted values and predictor data (0.99 QGAM)
+fit_data <- data.frame(
+  Length = Q_qgam01$model$AvgL,  # Replace AvgL with your actual length variable
+  MP = fitted(Q_qgam01),
+  Changepoint = FALSE
+)
+
+
+# 1. Run changepoint analysis
+cpt <- changepoint::cpt.meanvar(fit_data$MP, method = "PELT", penalty = "BIC")
+threshold_positions <- fit_data$Length[changepoint::cpts(cpt)]
+
+# 2. Create SEGMENTATION dataframe (renamed from 'segments')
+seg_df <- data.frame(
+  start = c(min(fit_data$Length), threshold_positions),
+  end = c(threshold_positions, max(fit_data$Length))
+)
+
+# 3. Calculate segment statistics
+seg_df$mean_MP <- sapply(1:nrow(seg_df), function(i) {
+  mean(fit_data$MP[fit_data$Length >= seg_df$start[i] & 
+                     fit_data$Length <= seg_df$end[i]])
+})
+
+seg_df$n <- sapply(1:nrow(seg_df), function(i) {
+  sum(fit_data$Length >= seg_df$start[i] & 
+        fit_data$Length <= seg_df$end[i])
+})
+
+# 4. Filter meaningful thresholds (10% change & min 10 obs)
+meaningful_thresholds <- seg_df %>% 
+  mutate(MP_change = abs(mean_MP - lag(mean_MP))/mean_MP) %>%
+  filter(MP_change > 0.10, n > 15) %>% 
+  arrange(desc(MP_change))
+
+
+cpt_plot <- ggplot(fit_data, aes(Length, MP)) +
+  # Data points (Nature-style muted colors)
+  geom_point(alpha = 0.8, size = 2, color = "#DEDEDE") +
+  
+  # Threshold lines (color-blind friendly palette)
+  geom_vline(
+    data = meaningful_thresholds,
+    aes(xintercept = start),
+    color = c("#009E73", "#56B4E9", "#F4A637"), # Nature Communications palette
+    linetype = "dashed",
+    linewidth = 0.7
+  ) +
+  
+  #
+  
+  # Nature-style elements
+  labs(
+    x = "Shrimp length (cm)",
+    y = "Microplastic particles per individual"
+  ) +
+  
+  theme_minimal(base_size = 8) + # Nature typically uses 8pt base
+  theme(
+    text = element_text(family = "Helvetica", color = "black"),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(linewidth = 0.2, color = "grey90"),
+    axis.line = element_line(color = "black", linewidth = 0.25),
+    axis.ticks = element_line(color = "black", linewidth = 0.25),
+    plot.caption = element_text(
+      hjust = 0, 
+      size = 7 # Fixed margin error
+    ),
+    plot.margin = unit(c(4, 8, 4, 4), "mm") # Top, right, bottom, left
+  ) +
+  
+  # Statistical annotation
+  annotate(
+    "text", 
+    x = min(fit_data$Length), 
+    y = max(fit_data$MP) * 0.95,
+    label = paste(
+      "PELT changepoint detection\n",
+      "BIC penalty |",
+      "Min. ΔMP > 10%"
+    ),
+    hjust = -1.8, vjust = 14, size = 2.5, color = "grey30"
+  )
