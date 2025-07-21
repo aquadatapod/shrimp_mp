@@ -397,11 +397,13 @@ plot_h<-plot(sm(a1,4),trans=function(x) x+coef(a1)[1]
                                         fill = NA))
 
 ################################################################################
-figure_3 <- mgcViz::gridPrint(plot_e,plot_f,plot_g, plot_h,
+# Figure 4 plot
+figure_4 <- mgcViz::gridPrint(plot_e,plot_f,plot_g, plot_h,
                               plot_a,plot_b,plot_c, plot_d,nrow=2)
-################################################################################
 
+################################################################################
 # Changepoint and threshold detection###########################################
+################################################################################
 
 # Get fitted values and predictor data (0.99 QGAM)
 fit_data <- data.frame(
