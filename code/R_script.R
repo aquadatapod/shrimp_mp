@@ -27,6 +27,9 @@ library(corrplot)
 library(ggplot2)
 library(ggtext)
 library(grid) # For proper margin units
+library(gratia) # diagnostic plots
+library(patchwork) # diagnostics
+library(changepoint)
 
 # loading data 
 imp.dat<-read_excel("data/shrimp_data.xlsx",sheet = "shrimp")
@@ -197,6 +200,59 @@ print(plot(e1, allTerms = TRUE), pages = 1)
 
 p_table1 <- data.frame(summary_model1$p.table) 
 p_table2 <- data.frame(summary_model2$p.table) 
+
+################################################################################
+# Quantile Residual Diagnostics#################################################
+################################################################################
+# Identifies patterns in residuals across quantiles:
+appraise(Q_qgam02, method = "simulate") 
+appraise(Q_qgam02, method = "simulate") 
+
+# Generate the diagnostic plots for 0.99 quantile
+diag_plot01<- appraise(Q_qgam01, method = "simulate",
+                       point_col = "#1E88E5", 
+                       point_alpha = 0.6,
+                       line_col = "#D81B60") &
+  labs(title = NULL) &  # Removes all plot titles
+  theme_minimal(base_size = 9) &
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(linewidth = 0.2),
+    text = element_text(family = "Arial"),
+    plot.title = element_blank()  # Explicitly removes title space
+  )
+
+
+# Add panel labels (a-d) using patchwork
+labeled_plot_1 <- diag_plot01 + 
+  plot_layout(ncol = 2) &  # Arranges 4 plots in 2x2 grid
+  plot_annotation(tag_levels = 'a'  # Uses lowercase letters
+  ) & # Optional styling
+  theme(plot.tag = element_text(size = 10, face = "bold"),
+        plot.tag.position = c(0, 1))  # Top-left corner
+
+
+# Generate the diagnostic plots for 0.5 quantile
+diag_plo02 <- appraise(Q_qgam02, method = "simulate",
+                       point_col = "#1E88E5",
+                       point_alpha = 0.6,
+                       line_col = "#D81B60") &
+  labs(title = NULL) &
+  theme_minimal(base_size = 9) &
+  theme(
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(linewidth = 0.2),
+    text = element_text(family = "Arial"),
+    plot.title = element_blank()
+  )
+
+# Add panel labels (a-d) using patchwork
+labeled_plot <- diag_plo02 + 
+  plot_layout(ncol = 2) &  # Arranges 4 plots in 2x2 grid
+  plot_annotation(tag_levels = 'a'  # Uses lowercase letters
+  ) & # Optional styling
+  theme(plot.tag = element_text(size = 10, face = "bold"),
+        plot.tag.position = c(0, 1))  # Top-left corner
 
 ################################################################################
 ## Visualization ###############################################################
