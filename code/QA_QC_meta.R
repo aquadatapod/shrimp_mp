@@ -200,7 +200,7 @@ p_species_forest <- ggplot(species_results,
        y = "",
        title = "b. Species") +
   
-  # Theme matching your existing style
+  # Theme 
   theme_minimal() +
   theme(
     plot.title = element_text(face = "bold", hjust = 0.5, size = 11),
@@ -281,7 +281,7 @@ p_study_forest <- ggplot(study_results,
        y = "",
        title = "a. Studies") +
   
-  # Theme matching your existing style
+  # Theme 
   theme_minimal() +
   theme(
     plot.title = element_text(face = "bold", hjust = 0.5, size = 11),
@@ -436,7 +436,7 @@ season_results <- season_results %>%
   arrange(group_order, desc(Estimate)) %>%
   mutate(label = factor(label, levels = label))
 
-# Define colors (matching your new scheme)
+# Define colors 
 season_group_colors <- c(
   "High_Season" = "#DB5829",    # Burnt orange
   "Medium_Season" = "#5F6D7A",  # Slate gray
@@ -654,7 +654,7 @@ ggsave("Method_Forest_Plot_Faceted.png", p_method_facet,
 
 
 # ============================================================================
-# PART 4: ENVIRONMENT ANALYSIS - WITH COLOR CODING
+# PART 4: ENVIRONMENT ANALYSIS 
 # ============================================================================
 
 cat("\n📊 STEP 4: Analyzing Environment with color coding...\n")
@@ -738,7 +738,7 @@ print(p_env_forest)
 cat("✅ Saved: Forest_Plot_Environment.png\n")
 
 # ============================================================================
-# PART 5: CATCH METHOD ANALYSIS - WITH COLOR CODING
+# PART 5: CATCH METHOD ANALYSIS 
 # ============================================================================
 
 cat("\n📊 STEP 5: Analyzing Catch Method with color coding...\n")
@@ -828,7 +828,7 @@ cat("✅ Saved: Forest_Plot_Catch_Method.png\n")
 
 
 # ============================================================================
-# PART 6: COUNTRY ANALYSIS - WITH COLOR CODING
+# PART 6: COUNTRY ANALYSIS
 # ============================================================================
 
 cat("\n📊 STEP 6: Analyzing Country with color coding...\n")
@@ -985,43 +985,5 @@ ggsave("Figure_Master_Heterogeneity_Aligned.png", master_figure,
 
 ggsave("Figure_Master_Heterogeneity_Aligned.pdf", master_figure, 
        width = 12, height = 10, dpi = 600, bg = "white")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 

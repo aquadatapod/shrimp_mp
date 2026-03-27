@@ -37,7 +37,7 @@ library(changepoint)
 imp.dat<-read_excel("data/shrimp_data.xlsx",sheet = "shrimp")
 summary(imp.dat)
 
-# Convert Years to a factor in your dataset if not already
+# Convert Years to a factor in dataset if not already
 imp.dat$Year_f <- as.factor(imp.dat$Years)
 ################################################################################ 
 # Length
@@ -519,7 +519,7 @@ mgcViz::gridPrint(plot_e,plot_f,plot_g, plot_h,
 
 # Get fitted values and predictor data (0.99 QGAM)
 fit_data <- data.frame(
-  Length = Q_qgam01$model$AvgL,  # Replace AvgL with your actual length variable
+  Length = Q_qgam01$model$AvgL,  # Replace AvgL with actual length variable
   MP = fitted(Q_qgam01),
   Changepoint = FALSE
 )
