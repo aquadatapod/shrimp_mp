@@ -1,6 +1,6 @@
 ################################################################################
 # Purpose: model used in analysis for
-#          Submitted manuscript
+#          Submitted manuscript [Nature Food]
 # NOTE   : this code is a guide for transparency and
 #          reproducibility
 ################################################################################ 
@@ -37,6 +37,8 @@ library(changepoint)
 imp.dat<-read_excel("data/shrimp_data.xlsx",sheet = "shrimp")
 summary(imp.dat)
 
+# Convert Years to a factor in your dataset if not already
+imp.dat$Year_f <- as.factor(imp.dat$Years)
 ################################################################################ 
 # Length
 ################################################################################
@@ -170,6 +172,54 @@ Q_qgam01 <- qgam(MPperind ~
                  argGam = list(select=F),
                  data = imp.dat, qu=0.99)
 
+
+
+Q_qgam001 <- qgam(MPperind ~ 
+                   s(Longitude, Latitude, bs="ts") +
+                   s(AvgL, bs = "ts", k = 8) +
+                   s(AvgW, bs= "ts", k = 8) +
+                   s(SpeciesNo, bs ="ad", k = 8) +
+                   as.factor(Continent) +
+                   # Random intercept for Year
+                   s(Year_f, bs = "re"),
+                 argGam = list(select=F),
+                 data = imp.dat, qu=0.99)
+
+summary(Q_qgam01)
+summary(Q_qgam001)
+getViz(Q_qgam01)
+getViz(Q_qgam01)
+
+Q_qgam09 <- qgam(MPperind ~ 
+                   s(Longitude, Latitude, bs="ts") +
+                   s(AvgL, bs = "ts", k = 8) +
+                   s(AvgW, bs= "ts", k = 8) +
+                   s(SpeciesNo, bs ="ad", k = 8) +
+                   as.factor(Continent)+
+                   te(Years,bs="ts", d =1),
+                 argGam = list(select=F),
+                 data = imp.dat, qu=0.90)
+
+Q_qgam08 <- qgam(MPperind ~ 
+                   s(Longitude, Latitude, bs="ts") +
+                   s(AvgL, bs = "ts", k = 8) +
+                   s(AvgW, bs= "ts", k = 8) +
+                   s(SpeciesNo, bs ="ad", k = 8) +
+                   as.factor(Continent)+
+                   te(Years,bs="ts", d =1),
+                 argGam = list(select=F),
+                 data = imp.dat, qu=0.80)
+
+Q_qgam07 <- qgam(MPperind ~ 
+                   s(Longitude, Latitude, bs="ts") +
+                   s(AvgL, bs = "ts", k = 8) +
+                   s(AvgW, bs= "ts", k = 8) +
+                   s(SpeciesNo, bs ="ad", k = 8) +
+                   as.factor(Continent)+
+                   te(Years,bs="ts", d =1),
+                 argGam = list(select=F),
+                 data = imp.dat, qu=0.70)
+
 Q_qgam02 <- qgam(MPperind ~ 
                    s(Longitude, Latitude, bs="ts") +
                    s(AvgL, bs = "ts", k = 8) +
@@ -188,16 +238,25 @@ Q_qgam02 <- gam(MPperind ~
                   as.factor(Continent)+
                   te(Years,bs="ts", d =1),
                 argGam = list(select=F),
-                data = imp.dat
-)
+                data = imp.dat)
 AIC(Q_qgam02)
 e <- getViz(Q_qgam01)
 a <- getViz(Q_qgam02)
+b <- getViz(Q_qgam09)
+c <- getViz(Q_qgam08)
+d <- getViz(Q_qgam07)
+
 e1<-e #gamViz object from above, edit variable name in plots as appropriate
 a1 <- a
+b1 <- b
+c1 <- c
+d1 <- d
 summary_model1 <- summary(a1)
 summary_model2 <- summary(e1)
-AIC(a1, e1)
+summary_model3 <- summary(a1)
+summary_model4 <- summary(b1)
+summary_model5 <- summary(c1)
+AIC(a1, e1, b1, c1, d1)
 print(plot(e1, allTerms = TRUE), pages = 1)
 
 p_table1 <- data.frame(summary_model1$p.table) 
@@ -383,7 +442,7 @@ AIC(fitlv)
 AIC(gam_model)
 
 mgcViz::gridPrint(p_a,p_nlr, p_gam,
-                              p_b,p_c,p_d, nrow=2)
+                  p_b,p_c,p_d, nrow=2)
 
 
 # QGAM plot#####################################################################
@@ -452,7 +511,7 @@ plot_h<-plot(sm(a1,4),trans=function(x) x+coef(a1)[1]
 
 ################################################################################
 mgcViz::gridPrint(plot_e,plot_f,plot_g, plot_h,
-                              plot_a,plot_b,plot_c, plot_d,nrow=2)
+                  plot_a,plot_b,plot_c, plot_d,nrow=2)
 
 ################################################################################
 # Changepoint and threshold detection###########################################
@@ -541,296 +600,3 @@ cpt_plot <- ggplot(fit_data, aes(Length, MP)) +
     ),
     hjust = -1.8, vjust = 14, size = 2.5, color = "grey30"
   )
-
-
-
-
-
-
-################################################################################
-# GAM models INCORPORATING QA/QC variables---------------------------------------# Validation using the heterogeniety
-################################################################################
-
-library(mgcViz)
-library(qgam)
-
-################################################################################
-# Create groups
-################################################################################
-
-# Step 1: First create simplified method categories (as you did earlier)
-imp.dat <- imp.dat %>%
-  mutate(
-    method_simple = case_when(
-      # KOH-based methods
-      extraction_method == "KOH" ~ "KOH only",
-      extraction_method == "KOH/H2O2" ~ "KOH + H2O2",
-      extraction_method == "KOH/HNO3" ~ "KOH + HNO3",
-      extraction_method == "KOH+ASE" ~ "KOH + ASE",
-      
-      # NaOH-based methods
-      extraction_method == "NaOH" ~ "NaOH only",
-      extraction_method == "H2O2+NAOH" ~ "NaOH + H2O2",
-      
-      # H2O2-based methods
-      extraction_method == "H2O2" ~ "H2O2 only",
-      
-      # Acid-based methods
-      extraction_method == "HNO3" ~ "HNO3 only",
-      extraction_method == "HNO3/HCIO4" ~ "HNO3 + HClO4",
-      extraction_method == "H2O2/HNO3" ~ "HNO3 + H2O2",
-      extraction_method == "H2O2/HNO3/HCIO4" ~ "HNO3 + HClO4 + H2O2",
-      
-      # Multi-reagent combinations
-      extraction_method == "H2O2/KOH/HCIO4/HNO3" ~ "Multiple (H2O2+KOH+HClO4+HNO3)",
-      
-      # No digestion
-      extraction_method %in% c("Visual sorting", "Visula sorting") ~ "Visual sorting only",
-      
-      # NA or missing
-      is.na(extraction_method) | extraction_method == "NA" ~ "Not specified",
-      
-      # Default
-      TRUE ~ "Other"
-    )
-  )
-
-# Check the distribution
-cat("\n📊 Method_simple distribution:\n")
-print(table(imp.dat$method_simple, useNA = "ifany"))
-
-# Step 2: NOW create method groups based on heterogeneity results
-imp.dat <- imp.dat %>%
-  mutate(
-    method_group = case_when(
-      method_simple %in% c("Multiple (H2O2+KOH+HClO4+HNO3)", "NaOH + H2O2", "HNO3 only") ~ "High_Recovery",
-      method_simple %in% c("HNO3 + HClO4", "H2O2 only", "KOH only") ~ "Medium_Recovery",
-      method_simple %in% c("KOH + HNO3", "HNO3 + HClO4 + H2O2", "Visual sorting only") ~ "Low_Recovery",
-      method_simple == "NaOH only" ~ "Problematic",
-      method_simple == "Not specified" ~ "Not specified",
-      TRUE ~ "Other"
-    )
-  )
-
-# Check the result
-cat("\n📊 Method_group distribution:\n")
-print(table(imp.dat$method_group, useNA = "ifany"))
-
-# Step 3: Create binary indicators for GAM
-imp.dat <- imp.dat %>%
-  mutate(
-    # Binary indicators for GAM (always works)
-    is_high_recovery = ifelse(method_group == "High_Recovery", 1, 0),
-    is_medium_recovery = ifelse(method_group == "Medium_Recovery", 1, 0),
-    is_low_recovery = ifelse(method_group == "Low_Recovery", 1, 0),
-    is_problematic = ifelse(method_group == "Problematic", 1, 0),
-    
-    # For models, use High_Recovery as reference
-    method_group_factor = factor(method_group, 
-                                 levels = c("High_Recovery", "Medium_Recovery", 
-                                            "Low_Recovery", "Problematic", "Other", "Not specified"))
-  )
-
-# Check final distribution
-cat("\n📊 Final method_group distribution:\n")
-print(table(imp.dat$method_group, imp.dat$method_simple))
-
-
-
-# method_group has multiple levels
-if(length(unique(imp.dat$method_group[!imp.dat$method_group %in% c("Other", "Not specified")])) >= 2) {
-  
-  # Use only the meaningful groups
-  imp.dat_gam <- imp.dat %>% 
-    filter(!method_group %in% c("Other", "Not specified")) %>%
-    mutate(method_group = factor(method_group))
-  
-  Q_qgam_method <- qgam(MPperind ~ 
-                          s(Longitude, Latitude, bs="ts") +
-                          s(AvgL, bs = "ts", k = 8) +
-                          s(AvgW, bs= "ts", k = 8) +
-                          s(SpeciesNo, bs ="ad", k = 8) +
-                          as.factor(Continent) +
-                          method_group +  # Now has multiple levels!
-                          te(Years, bs="ts", d =1),
-                        argGam = list(select=F),
-                        data = imp.dat_gam, qu=0.99)
-  
-  summary(Q_qgam_method)
-}
-
-
-
-################################################################################
-# Season
-################################################################################
-# COMPLETE MODEL WITH BOTH QA/QC FACTORS
-################################################################################
-
-# First, create clean season groups based on heterogeneity results
-imp.dat <- imp.dat %>%
-  mutate(
-    # Create season groups (based on ANOVA results)
-    season_group = case_when(
-      season %in% c("Summer", "Spring/Autumn") ~ "High_Season",
-      season %in% c("Autumn", "Winter", "Spring/Summer", "Annual (All Seasons)") ~ "Medium_Season",
-      season %in% c("Monsoon", "Winter/Monsoon") ~ "Low_Season",
-      season %in% c("Autumn/Winter", "Summer/Monsoon/Winter") ~ "Minimal_Season",
-      TRUE ~ "Other"
-    ),
-    
-    # Convert to factor with logical order
-    season_group = factor(season_group, 
-                          levels = c("High_Season", "Medium_Season", 
-                                     "Low_Season", "Minimal_Season", "Other"))
-  )
-
-# Check distributions
-cat("\n📊 Season_group distribution:\n")
-print(table(imp.dat$season_group, imp.dat$season, useNA = "ifany"))
-
-cat("\n📊 Method_group distribution:\n")
-print(table(imp.dat$method_group, imp.dat$method_simple, useNA = "ifany"))
-
-# Run model with BOTH factors
-imp.dat_both <- imp.dat %>%
-  filter(!method_group %in% c("Other", "Not specified"),
-         !season_group %in% c("Other")) %>%
-  mutate(
-    method_group = factor(method_group),
-    season_group = factor(season_group)
-  )
-
-cat("\n📊 Final dataset: ", nrow(imp.dat_both), " observations\n")
-cat("Method groups: ", paste(levels(imp.dat_both$method_group), collapse = ", "), "\n")
-cat("Season groups: ", paste(levels(imp.dat_both$season_group), collapse = ", "), "\n")
-
-################################################################################
-# SIMPLIFIED MODEL 
-################################################################################
-
-# Remove less important smooths, keep only AvgL
-Q_qgam_both_simple <- qgam(MPperind ~ 
-                             s(AvgL, bs = "ts", k = 8) +  # Keep main variable
-                             as.factor(Continent) +
-                             method_group +     
-                             season_group,      
-                           argGam = list(select=F),
-                           data = imp.dat_both, qu=0.99)
-
-summary(Q_qgam_both_simple)
-
-# Compare with method-only model
-AIC(Q_qgam_method, Q_qgam_both_simple)
-
-
-
-
-# Plot the smooth term for AvgL
-
-viz <- getViz(Q_qgam_both_simple)
-plot(viz, smooth = "s(AvgL)") + 
-  labs(title = "Non-linear relationship between shrimp length and MP accumulation",
-       subtitle = "Controlling for method, season, and continent",
-       x = "Average Length (cm)", 
-       y = "Smooth effect on MP accumulation") +
-  theme_minimal()
-
-ggsave("GAM_AvgL_Smooth.png", width = 8, height = 5, dpi = 300)
-
-
-plot_b <- plot(sm(viz, 1)) +
-  l_rug() +
-  l_ciPoly(fill = "#FA5447", alpha = 0.1) +
-  l_fitLine(color = "#FA5447") +
-  ggtitle("Non-linear relationship between shrimp length and MP accumulation") +
-  xlab("Average Length (cm)") +
-  ylab("Smooth effect on MP accumulation") +
-  theme(
-    panel.background = element_rect(
-      linewidth = 0.8,
-      colour = "black",
-      fill = NA
-    )
-  )
-
-Q_qgam_both_simple_05 <- qgam(MPperind ~ 
-                                s(AvgL, bs = "ts", k = 8) +
-                                as.factor(Continent) +
-                                method_group +     
-                                season_group,      
-                              argGam = list(select=F),
-                              data = imp.dat_both, 
-                              qu = 0.5)
-
-summary(Q_qgam_both_simple_05)
-
-
-check05 <- getViz(Q_qgam_both_simple_05)
-qq(check05)
-plot(check05, allTerms = TRUE)
-
-
-levels(imp.dat_both$Continent)
-imp.dat_both$Continent <- as.factor(imp.dat_both$Continent)
-levels(imp.dat_both$Continent)
-newdat <- data.frame(
-  AvgL = seq(min(imp.dat_both$AvgL, na.rm = TRUE),
-             max(imp.dat_both$AvgL, na.rm = TRUE), length = 200)
-)
-
-# Use most frequent category (best practice)
-newdat$Continent <- factor(
-  names(sort(table(imp.dat_both$Continent), decreasing = TRUE))[1],
-  levels = levels(imp.dat_both$Continent)
-)
-
-newdat$method_group <- factor(
-  names(sort(table(imp.dat_both$method_group), decreasing = TRUE))[1],
-  levels = levels(as.factor(imp.dat_both$method_group))
-)
-
-newdat$season_group <- factor(
-  names(sort(table(imp.dat_both$season_group), decreasing = TRUE))[1],
-  levels = levels(as.factor(imp.dat_both$season_group))
-)
-
-pred05 <- predict(Q_qgam_both_simple_05, newdata = newdat, se.fit = TRUE)
-pred99 <- predict(Q_qgam_both_simple, newdata = newdat, se.fit = TRUE)
-
-
-# Add predictions to dataframe
-newdat$fit05 <- pred05$fit
-newdat$fit99 <- pred99$fit
-
-newdat$upper99 <- pred99$fit + 2 * pred99$se.fit
-newdat$lower99 <- pred99$fit - 2 * pred99$se.fit
-
-
-plot_final <- ggplot(newdat, aes(x = AvgL)) +
-  
-  geom_ribbon(aes(ymin = lower99, ymax = upper99),
-              fill = "#FA5447", alpha = 0.12) +
-  
-  geom_line(aes(y = fit99), color = "#FA5447", linewidth = 1.2) +
-  geom_line(aes(y = fit05), color = "grey30", linewidth = 1) +
-  
-  geom_rug(data = imp.dat_both,
-           aes(x = AvgL),
-           inherit.aes = FALSE,
-           alpha = 0.15) +
-  
-  labs(
-    x = "Shrimp length (cm)",
-    y = "Predicted microplastic abundance (MP per individual)"
-  ) +
-  
-  theme_classic(base_size = 12) +
-  theme(
-    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.6),
-    axis.title = element_text(face = "plain"),
-    axis.text = element_text(color = "black"),
-    legend.position = "none",
-    plot.margin = ggplot2::margin(5, 5, 5, 5)
-  )
-
