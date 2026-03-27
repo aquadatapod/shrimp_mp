@@ -460,7 +460,7 @@ mgcViz::gridPrint(plot_e,plot_f,plot_g, plot_h,
 
 # Get fitted values and predictor data (0.99 QGAM)
 fit_data <- data.frame(
-  Length = Q_qgam01$model$AvgL,  # Replace AvgL with your actual length variable
+  Length = Q_qgam01$model$AvgL,  # Replace AvgL with actual length variable
   MP = fitted(Q_qgam01),
   Changepoint = FALSE
 )

@@ -1,7 +1,6 @@
 # ============================================================================
-# COMPLETE HETEROGENEITY ANALYSIS FOR MICROPLASTIC META-ANALYSIS
+# HETEROGENEITY ANALYSIS FOR MICROPLASTIC META-ANALYSIS
 # Includes: Season, Method, Environment, Catch Method, Country, Year
-# All plots follow consistent styling with the first approach
 # ============================================================================
 
 # Load required packages
@@ -27,7 +26,7 @@ theme_hetero_base <- theme_minimal() +
 
 
 # ============================================================================
-# RECOMMENDED: MULTILEVEL META-ANALYSIS WITH SENSITIVITY CHECKS
+# MULTILEVEL META-ANALYSIS WITH SENSITIVITY CHECKS
 # ============================================================================
 
 df <- read_excel("shrimp_data001.xlsx", sheet = "shrimp")

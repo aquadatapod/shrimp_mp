@@ -1,6 +1,6 @@
 ################################################################################
 # Purpose: model used in analysis for
-#          Submitted manuscript [Nature Food]
+#          Submitted manuscript
 # NOTE   : this code is a guide for transparency and
 #          reproducibility
 ################################################################################ 
